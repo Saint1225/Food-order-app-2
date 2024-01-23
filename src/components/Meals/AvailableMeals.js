@@ -3,48 +3,77 @@ import { useState, useEffect } from "react";
 import Card from "../UI/Card";
 import MealItem from "./MealItem/MealItem";
 import classes from "./AvailableMeals.module.css";
+import { useQuery } from "@tanstack/react-query";
 
 const AvailableMeals = () => {
-  const [loadedMeals, setLoadedMeals] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const fetchData = async () => {
+    const response = await fetch(
+      "https://react-http-2bc42-default-rtdb.asia-southeast1.firebasedatabase.app/meals.json"
+    );
 
-  useEffect(() => {
-    setIsLoading(true);
-    let timer;
-    const fetchData = async () => {
-      clearTimeout(timer);
-      try {
-        const response = await fetch(
-          "https://react-http-2bc42-default-rtdb.asia-southeast1.firebasedatabase.app/meals.json",
-          {
-            method: "GET",
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Fetch issue!");
-        }
-        const meals = await response.json();
-        const mealsArray = Object.keys(meals).map((key) => ({
-          id: key,
-          name: meals[key].name,
-          description: meals[key].description,
-          price: meals[key].price,
-        }));
-        setLoadedMeals(mealsArray);
-        timer = setTimeout(() => {
-          setIsLoading(false);
-        }, 2000);
-      } catch (error) {
-        console.log(error);
-        setError(error.message);
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+    if (!response.ok) {
+      throw new Error("Fetch issue!");
+    }
+    const data = await response.json();
+    const mealsArray = Object.keys(data).map((key) => ({
+      id: key,
+      name: data[key].name,
+      description: data[key].description,
+      price: data[key].price,
+    }));
+    console.log(mealsArray);
+    return mealsArray;
+  };
 
-  const mealsList = loadedMeals.map((meal) => (
+  const {
+    data: loadedMeals,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["meals"],
+    queryFn: fetchData,
+  });
+
+  // const [loadedMeals, setLoadedMeals] = useState([]);
+  // const [isLoading, setIsLoading] = useState(false);
+  // const [error, setError] = useState("");
+
+  // useEffect(() => {
+  //   setIsLoading(true);
+  //   let timer;
+  //   const fetchData = async () => {
+  //     clearTimeout(timer);
+  //     try {
+  //       const response = await fetch(
+  //         "https://react-http-2bc42-default-rtdb.asia-southeast1.firebasedatabase.app/meals.json",
+  //         {
+  //           method: "GET",
+  //         }
+  //       );
+  //       if (!response.ok) {
+  //         throw new Error("Fetch issue!");
+  //       }
+  //       const meals = await response.json();
+  //       const mealsArray = Object.keys(meals).map((key) => ({
+  //         id: key,
+  //         name: meals[key].name,
+  //         description: meals[key].description,
+  //         price: meals[key].price,
+  //       }));
+  //       setLoadedMeals(mealsArray);
+  //       timer = setTimeout(() => {
+  //         setIsLoading(false);
+  //       }, 2000);
+  //     } catch (error) {
+  //       console.log(error);
+  //       setError(error.message);
+  //       setIsLoading(false);
+  //     }
+  //   };
+  //   fetchData();
+  // }, []);
+
+  const mealsList = loadedMeals?.map((meal) => (
     <MealItem
       key={meal.id}
       id={meal.id}
